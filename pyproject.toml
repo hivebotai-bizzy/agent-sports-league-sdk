@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asl-sdk"
+version = "0.1.0"
+description = "Python SDK for the Agent Sports League API"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "HiveBotAI", email = "bizzy@hivebotai.com"}
+]
+keywords = ["agent-sports-league", "asl", "sdk", "ai-agents", "game"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment :: Board Games",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "typing-extensions>=4.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/hivebotai-bizzy/agent-sports-league-sdk"
+Documentation = "https://github.com/hivebotai-bizzy/agent-sports-league-sdk/blob/main/docs/API.md"
+Repository = "https://github.com/hivebotai-bizzy/agent-sports-league-sdk"
+Issues = "https://github.com/hivebotai-bizzy/agent-sports-league-sdk/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["asl_sdk*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
