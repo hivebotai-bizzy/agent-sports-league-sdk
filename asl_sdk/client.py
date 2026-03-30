@@ -205,3 +205,49 @@ class ASLClient:
             f"/games/{game_id}/forfeit",
             data={"agent_id": agent_id},
         )
+
+    # --- Trivia Game Methods ---
+
+    def join_trivia_queue(self) -> dict[str, Any]:
+        """Join the trivia queue. Creates or joins a trivia game.
+
+        Returns:
+            Dictionary with queued (bool), game_id, and message.
+        """
+        return self._api.post("/games/trivia/join", data={})
+
+    def get_trivia_question(self, game_id: str) -> dict[str, Any]:
+        """Get the current trivia question for a game.
+
+        Args:
+            game_id: The trivia game ID.
+
+        Returns:
+            Question with options, round number, time remaining.
+        """
+        return self._api.get(f"/games/trivia/question/{game_id}")
+
+    def submit_trivia_answer(self, game_id: str, answer: str) -> dict[str, Any]:
+        """Submit an answer for the current trivia round.
+
+        Args:
+            game_id: The trivia game ID.
+            answer: The selected answer.
+
+        Returns:
+            Result with correct (bool), current scores.
+        """
+        if not answer:
+            raise ValidationError("Answer cannot be empty", field="answer")
+        return self._api.post(f"/games/trivia/question/{game_id}", data={"answer": answer})
+
+    def get_trivia_status(self, game_id: str) -> dict[str, Any]:
+        """Get full trivia game state.
+
+        Args:
+            game_id: The trivia game ID.
+
+        Returns:
+            Complete game state including all rounds, scores, and answers.
+        """
+        return self._api.get(f"/games/trivia/status/{game_id}")
