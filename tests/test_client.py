@@ -1,5 +1,7 @@
 """Tests for the ASL SDK client."""
 
+import hashlib
+import hmac
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -28,24 +30,28 @@ class TestASLClient:
     def test_register_agent_success(self, client: ASLClient) -> None:
         """Test successful agent registration."""
         mock_response = {
-            "agent_id": "agt_123",
+            "id": "agt_123",
             "name": "TestBot",
-            "x_handle": "@TestBot",
+            "claim_code": "claim_123",
+            "challenge_string": "challenge_abc",
+            "api_key": "key_123",
+            "verification_needed": True,
             "game_type": "chess",
             "verified": False,
-            "created_at": "2026-03-20T00:00:00Z",
         }
         client._api.post.return_value = mock_response
 
         result = client.register_agent("TestBot", "@TestBot", "chess")
 
-        assert result["agent_id"] == "agt_123"
+        assert result["id"] == "agt_123"
         assert result["name"] == "TestBot"
+        assert client.api_key == "key_123"
+        assert client.challenge_string == "challenge_abc"
         client._api.post.assert_called_once_with(
-            "/agents",
+            "/agents/register",
             data={
                 "name": "TestBot",
-                "x_handle": "@TestBot",
+                "owner_twitter": "@TestBot",
                 "game_type": "chess",
             },
         )
@@ -60,7 +66,7 @@ class TestASLClient:
         """Test registration fails without an X handle."""
         with pytest.raises(ValidationError) as exc_info:
             client.register_agent("TestBot", "", "chess")
-        assert exc_info.value.field == "x_handle"
+        assert exc_info.value.field == "owner_twitter"
 
     def test_register_agent_missing_game_type(self, client: ASLClient) -> None:
         """Test registration fails without a game type."""
@@ -69,20 +75,43 @@ class TestASLClient:
         assert exc_info.value.field == "game_type"
 
     def test_verify_agent(self, client: ASLClient) -> None:
-        """Test agent verification."""
+        """Test HMAC agent verification."""
         mock_response = {
-            "agent_id": "agt_123",
+            "id": "agt_123",
+            "api_key": "key_123",
             "verified": True,
-            "verified_at": "2026-03-20T01:00:00Z",
+            "api_enabled": True,
         }
         client._api.post.return_value = mock_response
+        client.challenge_string = "challenge_abc"
 
-        result = client.verify_agent("agt_123", "Verifying my agent: agt_123")
+        result = client.verify_agent("claim_123", "key_123")
 
         assert result["verified"] is True
+        expected_signature = hmac.new(
+            b"key_123",
+            b"challenge_abc",
+            hashlib.sha256,
+        ).hexdigest()
         client._api.post.assert_called_once_with(
             "/agents/verify",
-            data={"agent_id": "agt_123", "tweet_text": "Verifying my agent: agt_123"},
+            data={
+                "claim_code": "claim_123",
+                "api_key": "key_123",
+                "challenge_string": "challenge_abc",
+                "signed_challenge": expected_signature,
+            },
+        )
+
+    def test_get_current_agent(self, client: ASLClient) -> None:
+        """Test fetching the authenticated agent."""
+        client._api.get.return_value = {"id": "agt_123", "name": "TestBot"}
+
+        result = client.get_current_agent(api_key="key_123")
+
+        assert result["id"] == "agt_123"
+        client._api.get.assert_called_once_with(
+            "/agents/me", headers={"X-ASL-Key": "key_123"}
         )
 
     def test_get_available_games(self, client: ASLClient) -> None:
@@ -124,12 +153,15 @@ class TestASLClient:
             "is_valid": True,
         }
         client._api.post.return_value = mock_response
+        client.api_key = "key_123"
 
         result = client.submit_move("gm_abc", "e4")
 
         assert result["is_valid"] is True
         client._api.post.assert_called_once_with(
-            "/games/gm_abc/moves", data={"move": "e4"}
+            "/games/gm_abc/submit",
+            data={"move": "e4"},
+            headers={"X-ASL-Key": "key_123"},
         )
 
     def test_submit_move_empty(self, client: ASLClient) -> None:

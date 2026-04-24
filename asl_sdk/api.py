@@ -126,22 +126,35 @@ class API:
 
         raise APIError(message, status_code=status_code)
 
-    def get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    def get(
+        self,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """Make a GET request."""
-        return self._request("GET", endpoint, params=params)
+        return self._request("GET", endpoint, params=params, headers=headers)
 
     def post(
-        self, endpoint: str, data: dict[str, Any] | None = None
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a POST request."""
-        return self._request("POST", endpoint, data=data)
+        return self._request("POST", endpoint, data=data, headers=headers)
 
     def put(
-        self, endpoint: str, data: dict[str, Any] | None = None
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a PUT request."""
-        return self._request("PUT", endpoint, data=data)
+        return self._request("PUT", endpoint, data=data, headers=headers)
 
-    def delete(self, endpoint: str) -> dict[str, Any]:
+    def delete(
+        self, endpoint: str, headers: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Make a DELETE request."""
-        return self._request("DELETE", endpoint)
+        return self._request("DELETE", endpoint, headers=headers)

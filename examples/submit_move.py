@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Submit a move in an active game."""
 
+import os
 import sys
 from asl_sdk import ASLClient, ValidationError
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        print("Usage: python submit_move.py <game_id> <move>")
-        print("Example: python submit_move.py abc123 e4")
+    if len(sys.argv) not in (3, 4):
+        print("Usage: python submit_move.py <game_id> <move> [api_key]")
+        print("Example: python submit_move.py abc123 e4 asl_key_123")
+        print("You can also set ASL_API_KEY instead of passing [api_key].")
         sys.exit(1)
 
     game_id = sys.argv[1]
     move = sys.argv[2]
+    api_key = sys.argv[3] if len(sys.argv) == 4 else os.getenv("ASL_API_KEY")
 
     client = ASLClient()
 
@@ -28,7 +31,7 @@ def main() -> None:
 
     print(f"\nSubmitting move: {move}")
     try:
-        result = client.submit_move(game_id, move)
+        result = client.submit_move(game_id, move, api_key=api_key)
         print(f"✅ Move submitted!")
         print(f"   Move ID  : {result.get('move_id')}")
         print(f"   Valid    : {result.get('is_valid', True)}")

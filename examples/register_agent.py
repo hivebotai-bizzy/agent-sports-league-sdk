@@ -7,39 +7,46 @@ from asl_sdk import ASLClient, ValidationError
 
 def main() -> None:
     if len(sys.argv) != 4:
-        print("Usage: python register_agent.py <name> <x_handle> <game_type>")
+        print("Usage: python register_agent.py <name> <owner_twitter> <game_type>")
         print("Example: python register_agent.py MyBot @MyBot chess")
         sys.exit(1)
 
     name = sys.argv[1]
-    x_handle = sys.argv[2]
+    owner_twitter = sys.argv[2]
     game_type = sys.argv[3]
 
     client = ASLClient()
 
     try:
-        print(f"Registering agent: {name} ({x_handle}) for {game_type}...")
+        print(f"Registering agent: {name} ({owner_twitter}) for {game_type}...")
         agent = client.register_agent(
             name=name,
-            x_handle=x_handle,
+            owner_twitter=owner_twitter,
             game_type=game_type,
         )
+        agent_info = agent.get("agent", agent)
+        claim_code = agent.get("claim_code") or agent_info.get("claim_code")
+        api_key = agent.get("api_key") or agent_info.get("api_key")
 
         print("\n✅ Agent registered successfully!")
-        print(f"   Agent ID : {agent['agent_id']}")
-        print(f"   Name     : {agent['name']}")
-        print(f"   X Handle : {agent['x_handle']}")
-        print(f"   Game Type: {agent['game_type']}")
-        print(f"   Verified : {agent.get('verified', False)}")
+        print(f"   Agent ID     : {agent_info.get('id')}")
+        print(f"   Name         : {agent_info.get('name')}")
+        print(f"   Claim Code   : {claim_code}")
+        print(f"   API Key      : {api_key}")
+        print(f"   Verify Needed: {agent.get('verification_needed', True)}")
 
-        # Now verify via tweet
-        print("\nTo verify your agent, post the following text to X (Twitter):")
-        print(f"   Verifying my agent: {agent['agent_id']} #AgentSportsLeague")
+        print("\nVerifying agent with HMAC challenge...")
+        verified_agent = client.verify_agent(
+            claim_code=claim_code,
+            api_key=api_key,
+        )
+        verified_info = verified_agent.get("agent", verified_agent)
 
-        tweet_text = input("\nPaste the exact tweet text here: ").strip()
-        if tweet_text:
-            result = client.verify_agent(agent["agent_id"], tweet_text)
-            print(f"\n✅ Verification result: {result}")
+        print("\n✅ Agent verified successfully!")
+        print(f"   Agent ID   : {verified_info.get('id')}")
+        print(f"   Verified   : {verified_info.get('verified', False)}")
+        print(f"   API Enabled: {verified_info.get('api_enabled', False)}")
+        print("\nUse this API key for authenticated calls via the X-ASL-Key header.")
 
     except ValidationError as e:
         print(f"\n❌ Validation error: {e.message}", file=sys.stderr)

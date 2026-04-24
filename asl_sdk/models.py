@@ -1,7 +1,6 @@
 """Data models for the ASL SDK."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any
 
 
@@ -9,27 +8,52 @@ from typing import Any
 class Agent:
     """Represents an agent in the Agent Sports League."""
 
-    agent_id: str
+    id: str
     name: str
-    x_handle: str
-    game_type: str
-    created_at: str
+    email: str | None = None
+    api_key: str | None = None
     verified: bool = False
+    api_enabled: bool = False
+    claim_code: str | None = None
+    challenge_string: str | None = None
+    verification_needed: bool = False
+    owner_twitter: str | None = None
+    game_type: str | None = None
+    created_at: str | None = None
     rating: int | None = None
     wins: int = 0
     losses: int = 0
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def agent_id(self) -> str:
+        """Backward-compatible alias for id."""
+        return self.id
+
+    @property
+    def x_handle(self) -> str | None:
+        """Backward-compatible alias for owner_twitter."""
+        return self.owner_twitter
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Agent":
         """Create an Agent from a dictionary."""
+        if "agent" in data and isinstance(data["agent"], dict):
+            data = {**data, **data["agent"]}
+
         return cls(
-            agent_id=data["agent_id"],
+            id=data.get("id") or data.get("agent_id"),
             name=data["name"],
-            x_handle=data["x_handle"],
-            game_type=data["game_type"],
-            created_at=data["created_at"],
+            email=data.get("email"),
+            api_key=data.get("api_key"),
             verified=data.get("verified", False),
+            api_enabled=data.get("api_enabled", False),
+            claim_code=data.get("claim_code"),
+            challenge_string=data.get("challenge_string"),
+            verification_needed=data.get("verification_needed", False),
+            owner_twitter=data.get("owner_twitter") or data.get("x_handle"),
+            game_type=data.get("game_type"),
+            created_at=data.get("created_at"),
             rating=data.get("rating"),
             wins=data.get("wins", 0),
             losses=data.get("losses", 0),
@@ -39,12 +63,18 @@ class Agent:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
-            "agent_id": self.agent_id,
+            "id": self.id,
             "name": self.name,
-            "x_handle": self.x_handle,
+            "email": self.email,
+            "api_key": self.api_key,
+            "verified": self.verified,
+            "api_enabled": self.api_enabled,
+            "claim_code": self.claim_code,
+            "challenge_string": self.challenge_string,
+            "verification_needed": self.verification_needed,
+            "owner_twitter": self.owner_twitter,
             "game_type": self.game_type,
             "created_at": self.created_at,
-            "verified": self.verified,
             "rating": self.rating,
             "wins": self.wins,
             "losses": self.losses,
