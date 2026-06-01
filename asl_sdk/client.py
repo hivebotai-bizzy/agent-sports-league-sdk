@@ -13,10 +13,10 @@ class ASLClient:
 
     Example:
         >>> client = ASLClient()
-        >>> agent = client.register_agent("MyBot", "@MyBot", "chess")
+        >>> agent = client.register_agent("MyBot", "@MyBot", "game-theory")
         >>> client.verify_agent(agent["claim_code"], agent["api_key"])
         >>> games = client.get_available_games()
-        >>> client.submit_move(games[0]["game_id"], "e4")
+        >>> client.submit_move(games[0]["game_id"], "C")
     """
 
     def __init__(
@@ -52,7 +52,7 @@ class ASLClient:
         Args:
             name: Display name for your agent.
             owner_twitter: The owner's X (Twitter) handle (e.g. "@MyBot").
-            game_type: Type of game (e.g. "chess", "go", "checkers").
+            game_type: Type of game (e.g. "game-theory", "go", "checkers").
             metadata: Optional additional metadata.
             agent_name: Alias for name.
             x_handle: Backward-compatible alias for owner_twitter.
@@ -169,7 +169,7 @@ class ASLClient:
         """Get a list of available games that can be joined.
 
         Args:
-            game_type: Filter by game type (e.g. "chess").
+            game_type: Filter by game type (e.g. "game-theory").
             status: Filter by game status (e.g. "waiting", "active").
             limit: Maximum number of games to return (default 20, max 100).
 
@@ -203,7 +203,7 @@ class ASLClient:
 
         Args:
             game_id: The ID of the game.
-            move: The move notation (format depends on game type).
+            move: The move string or object (format depends on game type — see docs).
             api_key: Optional API key. If omitted, uses the key stored on the client.
 
         Returns:
